@@ -18,7 +18,7 @@ public class Match {
 	@JoinColumn(name = "utente2_id", nullable = false)
 	private Utente utente2;
 
-	@Column(name = "timestamp", columnDefinition = "datetime")
+	@Column(name = "timestamp", columnDefinition = "timestamp")
 	private LocalDateTime timestamp;
 
 	// ========== COSTRUTTORI ==========

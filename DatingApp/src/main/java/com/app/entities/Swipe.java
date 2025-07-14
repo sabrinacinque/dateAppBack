@@ -31,7 +31,7 @@ public class Swipe {
 	@Column(name = "tipo", nullable = false, columnDefinition = "varchar(255)")
 	private String tipo;
 	
-	@Column(name = "timestamp", nullable = false, columnDefinition = "datetime")
+	@Column(name = "timestamp", nullable = false, columnDefinition = "timestamp")
 	private LocalDateTime timestamp;
 	
 	public Swipe() {

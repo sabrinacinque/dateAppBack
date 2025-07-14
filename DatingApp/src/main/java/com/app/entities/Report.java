@@ -22,7 +22,7 @@ public class Report {
 	@Column(name = "motivo", columnDefinition = "Text")
 	private String motivo;	
 	
-	@Column(name = "timestamp", columnDefinition = "datetime")
+	@Column(name = "timestamp", columnDefinition = "timestamp")
 	private LocalDateTime timestamp;
 		
 	public Report() {

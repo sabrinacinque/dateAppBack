@@ -17,10 +17,10 @@ public class FirebaseConfig {
 
     @Value("${firebase.credentials.path}")
     private String credentialsPath;
-
+    
     @Value("${firebase.project.id}")
     private String projectId;
-
+    
     private final ResourceLoader resourceLoader;
 
     public FirebaseConfig(ResourceLoader resourceLoader) {
@@ -31,19 +31,30 @@ public class FirebaseConfig {
     public void initialize() {
         try {
             if (FirebaseApp.getApps().isEmpty()) {
+                
+                // Controlla se il file delle credenziali esiste
                 Resource resource = resourceLoader.getResource("file:" + credentialsPath);
+                
+                if (!resource.exists()) {
+                    System.out.println("⚠️  File Firebase non trovato: " + credentialsPath);
+                    System.out.println("📱 Le notifiche push saranno disabilitate, ma l'app funzionerà normalmente");
+                    System.out.println("💡 Per abilitare Firebase, aggiungi il file firebase-service-account.json in: " + credentialsPath);
+                    return;
+                }
+                
                 InputStream serviceAccount = resource.getInputStream();
-
+                
                 FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .setProjectId(projectId)
                     .build();
-
+                
                 FirebaseApp.initializeApp(options);
-                System.out.println("Firebase inizializzato con successo per progetto: " + projectId);
+                System.out.println("🔥 Firebase inizializzato con successo per progetto: " + projectId);
             }
         } catch (IOException e) {
-            System.err.println("Errore inizializzazione Firebase: " + e.getMessage());
+            System.err.println("❌ Errore inizializzazione Firebase: " + e.getMessage());
+            System.out.println("📱 L'applicazione continuerà senza notifiche push");
         }
     }
 }

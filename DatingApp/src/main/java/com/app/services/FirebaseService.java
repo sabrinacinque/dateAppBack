@@ -1,5 +1,6 @@
 package com.app.services;
 
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
@@ -21,6 +22,11 @@ public class FirebaseService {
     
     @Autowired
     private UtenteService utenteService;
+
+    // Verifica se Firebase è disponibile
+    private boolean isFirebaseAvailable() {
+        return !FirebaseApp.getApps().isEmpty();
+    }
 
     // Invia notifica per nuovo match
     public void inviaNotificaMatch(Long utenteId, String nomeAltroUtente) {
@@ -52,15 +58,22 @@ public class FirebaseService {
         try {
             // Verifica se l'utente ha notifiche attive
             if (!utenteService.hasNotificationsEnabled(utenteId)) {
-                System.out.println("Notifiche disabilitate per utente: " + utenteId);
+                System.out.println("📵 Notifiche disabilitate per utente: " + utenteId);
                 return;
             }
             
             // Ottieni device token
             Utente utente = utenteRepository.findById(utenteId).orElse(null);
             if (utente == null || utente.getDeviceToken() == null) {
-                System.out.println("Device token non trovato per utente: " + utenteId);
+                System.out.println("📱 Device token non trovato per utente: " + utenteId);
                 // Salva solo nel database
+                salvaNotificaDB(utenteId, tipo, contenuto);
+                return;
+            }
+            
+            // Controlla se Firebase è disponibile
+            if (!isFirebaseAvailable()) {
+                System.out.println("🔥 Firebase non disponibile, salvo solo nel DB per utente: " + utenteId);
                 salvaNotificaDB(utenteId, tipo, contenuto);
                 return;
             }
@@ -80,13 +93,13 @@ public class FirebaseService {
             
             // Invia notifica push
             String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("Notifica inviata con successo: " + response);
+            System.out.println("📬 Notifica push inviata con successo: " + response);
             
             // Salva nel database
             salvaNotificaDB(utenteId, tipo, contenuto);
             
         } catch (Exception e) {
-            System.err.println("Errore invio notifica per utente " + utenteId + ": " + e.getMessage());
+            System.err.println("❌ Errore invio notifica per utente " + utenteId + ": " + e.getMessage());
             
             // In caso di errore, salva comunque nel database
             salvaNotificaDB(utenteId, tipo, contenuto);
@@ -98,9 +111,9 @@ public class FirebaseService {
         try {
             Notifica notifica = new Notifica(utenteId, tipo, contenuto);
             notificaRepository.save(notifica);
-            System.out.println("Notifica salvata nel database per utente: " + utenteId);
+            System.out.println("💾 Notifica salvata nel database per utente: " + utenteId);
         } catch (Exception e) {
-            System.err.println("Errore salvataggio notifica DB: " + e.getMessage());
+            System.err.println("❌ Errore salvataggio notifica DB: " + e.getMessage());
         }
     }
 }

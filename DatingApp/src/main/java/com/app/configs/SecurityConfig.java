@@ -87,7 +87,8 @@ public class SecurityConfig {
                     "/webjars/**",         // Dipendenze web
                     "/api/report/**" ,      // Report pubblici
                     "/index.html",
-                    "/firebase-messaging-sw.js"
+                    "/firebase-messaging-sw.js",
+                    "/api/utenti"
                 ).permitAll()
                 
                 // Endpoint che richiedono ruolo PREMIUM

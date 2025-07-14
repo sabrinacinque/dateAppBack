@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.app.dto.ModificaUtenteDTO;
 import com.app.dto.RegistrazioneDto;
+import com.app.dto.UtenteDiscoverDTO;
 import com.app.entities.Posizione;
 import com.app.entities.Preferenze;
 import com.app.entities.Utente;
@@ -85,91 +86,113 @@ public class UtenteService {
 	}
 	
 	//UPDATE UTENTE	
-		public ResponseEntity<?> updateProfile(ModificaUtenteDTO uModificato) {
+	public ResponseEntity<?> updateProfile(ModificaUtenteDTO uModificato) {
+		
+		try {			
+				
+			String email = SecurityUtils.getCurrentUserEmail();
 			
-			try {			
-					
-				String email = SecurityUtils.getCurrentUserEmail();
-				
-				if (email == null)
-				    return ResponseEntity.badRequest().body("Utente non autenticato"); // Verifico che la username non sia nulla
-				
-				Utente uLoggato = utenteRepository.findByUsername(email)
-				    .orElseThrow(() -> new RuntimeException("Utente non trovato")); // Trova l'utente esistente				
-				  
-				        //VERIFICHE SU EMAIL  
-				if ( !(uLoggato.getUsername().equals(uModificato.getUsername())) ) {
-					if ( !(isEmailValida(uModificato.getUsername())) ) {
-						return ResponseEntity.badRequest().body("Modifica username rifiutata: il valore digitato non è valido");
-					} 
-					// Verifico che la nuova username non sia già usata nel database e sia valida
-					 else if ( utenteRepository.existsByUsername(uModificato.getUsername()) ) {
-						return ResponseEntity.badRequest().body("Modifica username rifiutata: Esite già nel database"); 
-					 }
-				}
-				
-				if ( uModificato.getPassword() == null || uModificato.getPassword().length() < 6 )
-					return ResponseEntity.badRequest().body("Password non valida, deve essere di almeno 6 caratteri!"); // Verifico che la nuova password contenga almeno 6 caratteri e non sia nulla         	
-				
-				if( uModificato.getDataNascita() == null)
-					return ResponseEntity.badRequest().body("Non puoi lasciare il campo data di nascita vuoto!"); // Verifico che la nuova data di nascita non sia nulla     
-				
-				// SE MODIFICO USERNAME O PASSWORD IL TOKEN NON E' PIU' VALIDO. DOBBIAMO GENERARNE UNO NUOVO TRAMITE IL LOGIN
-				
-				// Aggiorna solo i campi che possono essere modificati dall'utente
-				
-				if (!passwordEncoder.matches(uModificato.getPassword(), uLoggato.getPassword()))
-				uLoggato.setPassword(passwordEncoder.encode(uModificato.getPassword().trim()));
-				
-				uLoggato.setUsername(uModificato.getUsername().trim());
-				
-				if (uModificato.getNome() == null) uModificato.setNome("");
-					uLoggato.setNome(uModificato.getNome().trim());
+			if (email == null)
+			    return ResponseEntity.badRequest().body("Utente non autenticato");
+			
+			Utente uLoggato = utenteRepository.findByUsername(email)
+			    .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+			  
+			//VERIFICHE SU EMAIL  
+			if ( !(uLoggato.getUsername().equals(uModificato.getUsername())) ) {
+				if ( !(isEmailValida(uModificato.getUsername())) ) {
+					return ResponseEntity.badRequest().body("Modifica username rifiutata: il valore digitato non è valido");
+				} 
+				else if ( utenteRepository.existsByUsername(uModificato.getUsername()) ) {
+					return ResponseEntity.badRequest().body("Modifica username rifiutata: Esite già nel database"); 
+				 }
+			}
+			
+			if ( uModificato.getPassword() == null || uModificato.getPassword().length() < 6 )
+				return ResponseEntity.badRequest().body("Password non valida, deve essere di almeno 6 caratteri!");
+			
+			if( uModificato.getDataNascita() == null)
+				return ResponseEntity.badRequest().body("Non puoi lasciare il campo data di nascita vuoto!");
+			
+			// Aggiorna solo i campi che possono essere modificati dall'utente
+			if (!passwordEncoder.matches(uModificato.getPassword(), uLoggato.getPassword()))
+			uLoggato.setPassword(passwordEncoder.encode(uModificato.getPassword().trim()));
+			
+			uLoggato.setUsername(uModificato.getUsername().trim());
+			
+			if (uModificato.getNome() == null) uModificato.setNome("");
+				uLoggato.setNome(uModificato.getNome().trim());
 
-				uLoggato.setDataNascita(uModificato.getDataNascita());	
+			uLoggato.setDataNascita(uModificato.getDataNascita());	
+			
+			if (uModificato.getBio() == (null)) uModificato.setBio("");
+				uLoggato.setBio(uModificato.getBio().trim());
+			
+			if (uModificato.getGenere() == (null)) uModificato.setGenere(null);
+			uLoggato.setGenere(uModificato.getGenere());
+			
+			if (uModificato.getInteressi() == (null)) uModificato.setInteressi("");
+				uLoggato.setInteressi(uModificato.getInteressi().trim());
 				
-				if (uModificato.getBio() == (null)) uModificato.setBio("");
-					uLoggato.setBio(uModificato.getBio().trim());
-				
-				if (uModificato.getGenere() == (null)) uModificato.setGenere(null);
-				uLoggato.setGenere(uModificato.getGenere());
-				
-				if (uModificato.getInteressi() == (null)) uModificato.setInteressi("");
-					uLoggato.setInteressi(uModificato.getInteressi().trim());
-					
-				if (uLoggato.getPosizione() == null) 
-					uLoggato.setPosizione(new Posizione());
-						
+			// 🔥 GESTIONE POSIZIONE E COORDINATE
+			if (uLoggato.getPosizione() == null) 
+				uLoggato.setPosizione(new Posizione());
+			
+			// Aggiorna città se fornita
+			if (uModificato.getCittà() != null && !uModificato.getCittà().trim().isEmpty()) {
 				uLoggato.getPosizione().setCitta(uModificato.getCittà());
-				
-				if (uModificato.getFotoProfilo() == (null)) uModificato.setFotoProfilo("");
-					uLoggato.setFotoProfilo(uModificato.getFotoProfilo().trim());
-				
-				if (uModificato.getNotificheAttive()!=null)
-				uLoggato.setNotificheAttive(uModificato.getNotificheAttive());
-				
-				uLoggato.setPrimoAccesso(false);
-				
-				utenteRepository.save(uLoggato);
-				
-				return ResponseEntity.ok(uLoggato); 
-	    	 } catch (Exception e) {
-	    		 return ResponseEntity.badRequest().body("Errore nell'aggiornamento del profilo: " + e.getMessage());
-	    	 }	    
-		}
+				System.out.println("✅ Città aggiornata: " + uModificato.getCittà());
+			}
+			
+			// 🔥 COORDINATE DAL FRONTEND
+			if (uModificato.getLatitudine() != null && uModificato.getLongitudine() != null) {
+				uLoggato.getPosizione().setLatitudine(uModificato.getLatitudine());
+				uLoggato.getPosizione().setLongitudine(uModificato.getLongitudine());
+				System.out.println("✅ Coordinate aggiornate dal frontend: [" + 
+					uModificato.getLatitudine() + ", " + uModificato.getLongitudine() + "]");
+			}
+			
+			if (uModificato.getFotoProfilo() == (null)) uModificato.setFotoProfilo("");
+				uLoggato.setFotoProfilo(uModificato.getFotoProfilo().trim());
+			
+			if (uModificato.getNotificheAttive()!=null)
+			uLoggato.setNotificheAttive(uModificato.getNotificheAttive());
+			
+			uLoggato.setPrimoAccesso(false);
+			
+			utenteRepository.save(uLoggato);
+			
+			// Ritorna DTO invece dell'entity
+			UtenteDiscoverDTO utenteDTO = new UtenteDiscoverDTO(
+			    uLoggato.getId(),
+			    uLoggato.getNome(),
+			    uLoggato.getBio(),
+			    uLoggato.getInteressi(),
+			    uLoggato.getFotoProfilo(),
+			    uLoggato.getPosizione() != null ? uLoggato.getPosizione().getCitta() : null,
+			    calcolaEta(uLoggato.getDataNascita())
+			);
+			return ResponseEntity.ok(utenteDTO);
+			
+    	 } catch (Exception e) {
+    		 return ResponseEntity.badRequest().body("Errore nell'aggiornamento del profilo: " + e.getMessage());
+    	 }	    
+	}
 		
 	//UPDATE COORDINATE
 	public ResponseEntity<?> updateLocation(double latitudine, double longitudine){
 		
 		Utente utente = getCurrentUser();
+		if (utente.getPosizione() == null) {
+			utente.setPosizione(new Posizione());
+		}
 		utente.getPosizione().setLatitudine(latitudine);
 		utente.getPosizione().setLongitudine(longitudine);
 		utenteRepository.save(utente);
 		
 		return ResponseEntity.ok("posizione aggiornata");
 	}
-		
-	
+
 	/**
 	 * Metodo per verificare che l'email sia corretta.
 	 */	
@@ -177,33 +200,27 @@ public class UtenteService {
 	    if (email == null || email.trim().isEmpty()) {
 	        return false;
 	    }
-	 // Regex: almeno un punto dopo la @
 	    return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 	}	
 
 	/**
 	 * Ottiene il profilo pubblico di un utente (senza informazioni sensibili)
-	 * @param userId ID dell'utente
-	 * @return profilo pubblico dell'utente
 	 */
-	public Utente getPublicProfile(Long userId) {
+	public UtenteDiscoverDTO getPublicProfile(Long userId) {
 	    Utente utente = utenteRepository.findById(userId)
 	        .orElseThrow(() -> new RuntimeException("Utente non trovato"));
 	    
-	    // Crea una copia dell'utente con solo le informazioni pubbliche
-	    Utente profiloPubblico = new Utente();
-	    profiloPubblico.setId(utente.getId());
-	    profiloPubblico.setNome(utente.getNome());
-	    profiloPubblico.setBio(utente.getBio());
-	    profiloPubblico.setInteressi(utente.getInteressi());
-	    profiloPubblico.setPosizione(utente.getPosizione());
-	    profiloPubblico.setGenere(utente.getGenere());
-	    profiloPubblico.setDataNascita(utente.getDataNascita());
-	    profiloPubblico.setFotoProfilo(utente.getFotoProfilo());
+	    UtenteDiscoverDTO profiloDTO = new UtenteDiscoverDTO(
+	        utente.getId(),
+	        utente.getNome(),
+	        utente.getBio(),
+	        utente.getInteressi(),
+	        utente.getFotoProfilo(),
+	        utente.getPosizione() != null ? utente.getPosizione().getCitta() : null,
+	        calcolaEta(utente.getDataNascita())
+	    );
 	    
-	    // NON includere: email, password, dataRegistrazione, tipoAccount
-	    
-	    return profiloPubblico;
+	    return profiloDTO;
 	}
 
 	// Prende dati utente loggato (se loggato)
@@ -229,7 +246,6 @@ public class UtenteService {
 	}
 	
 	// aggiorno device token per le notifiche di Firebase
-	
 	public void updateDeviceToken(String email, String deviceToken) {
 		Utente utente = utenteRepository.findByUsername(email)
 				.orElseThrow(()-> new RuntimeException("Utente non trovato"));
@@ -267,5 +283,4 @@ public class UtenteService {
 	    }
 	        return Period.between(dataNascita, LocalDate.now()).getYears();
 	}
-	
 }

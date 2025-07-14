@@ -68,7 +68,7 @@ public class Utente {
 	@Column(name = "data_registrazione", nullable = false)
 	private LocalDate dataRegistrazione;
 	
-	@Column(name = "notifiche_attive", columnDefinition = "bit(1)")
+	@Column(name = "notifiche_attive")
 	private Boolean notificheAttive;
 	
 	@Column(name = "device_token", columnDefinition = "varchar(255)")

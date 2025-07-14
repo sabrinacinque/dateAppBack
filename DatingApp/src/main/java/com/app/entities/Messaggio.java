@@ -23,7 +23,7 @@ public class Messaggio {
 	@Column(name = "contenuto", columnDefinition = "varchar(255)")
 	private String contenuto;
 	
-	@Column(name = "timestamp", columnDefinition = "datetime")
+	@Column(name = "timestamp", columnDefinition = "timestamp")
 	private LocalDateTime timestamp;
 	
 	@Column(name = "stato", columnDefinition = "varchar(255)")

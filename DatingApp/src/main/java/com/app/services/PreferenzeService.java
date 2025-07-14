@@ -1,8 +1,10 @@
 package com.app.services;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -11,13 +13,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.app.dto.PreferenzeDto;
+import com.app.dto.UtenteDiscoverDTO;
 import com.app.entities.Preferenze;
 import com.app.entities.Utente;
 import com.app.repositories.PreferenceRepository;
 import com.app.repositories.UtenteRepository;
 
 import jakarta.validation.Validator;
-
 
 @Service
 public class PreferenzeService {
@@ -28,7 +30,8 @@ public class PreferenzeService {
 	@Autowired
 	private PreferenceRepository preferenceRepository;
 	
-	@Autowired Validator validator;
+	@Autowired 
+	Validator validator;
 
 	// Metodo per visualizzare le preferenze dell'utente
     public ResponseEntity<?> getPreferenzeByUtenteId(String username) {		
@@ -51,7 +54,14 @@ public class PreferenzeService {
         	preferenze = preferenzeOpt.get();
         }
         
-        return ResponseEntity.ok(preferenze);
+        // Ritorna DTO invece dell'entity
+        PreferenzeDto preferenzeDto = new PreferenzeDto(
+            preferenze.getGenerePreferito(),
+            preferenze.getMinEta(),
+            preferenze.getMaxEta(),
+            preferenze.getDistanzaMax()
+        );
+        return ResponseEntity.ok(preferenzeDto);
     }
 
 	// Metodo per modificare le preferenze dell'utente
@@ -70,7 +80,7 @@ public class PreferenzeService {
 		if (nuovePreferenze.getMaxEta() != null && nuovePreferenze.getMaxEta() > 100) 
 			return ResponseEntity.badRequest().body("Età Massima: Inserisci un valore minore di 100 anni");
 		if (nuovePreferenze.getMinEta() != null && nuovePreferenze.getMaxEta() != null && nuovePreferenze.getMinEta() > nuovePreferenze.getMaxEta()) 
-			return ResponseEntity.badRequest().body("L'Età Minima non puàò essere maggire dell'età massima. Inserisci dei valori corretti");
+			return ResponseEntity.badRequest().body("L'Età Minima non può essere maggiore dell'età massima. Inserisci dei valori corretti");
 		if (nuovePreferenze.getDistanzaMax() != null && nuovePreferenze.getDistanzaMax() < 0) 
 			return ResponseEntity.badRequest().body("Distanza Massima: Inserisci un valore maggiore di zero!");		
 		
@@ -98,8 +108,24 @@ public class PreferenzeService {
         
         // Salva le preferenze (nuove o aggiornate)
     	preferenceRepository.save(preferenze);
-    	return ResponseEntity.ok(preferenze);
+    	
+    	// Ritorna DTO invece dell'entity
+        PreferenzeDto preferenzeDto = new PreferenzeDto(
+            preferenze.getGenerePreferito(),
+            preferenze.getMinEta(),
+            preferenze.getMaxEta(),
+            preferenze.getDistanzaMax()
+        );
+        return ResponseEntity.ok(preferenzeDto);
     }    
+    
+    // Metodo per calcolare l'età
+    private int calcolaEta(LocalDate dataNascita) {
+        if (dataNascita == null) {
+            return 0;
+        }
+        return Period.between(dataNascita, LocalDate.now()).getYears();
+    }
     
     // PreferenzeService.java (inside getUtentiByPreferenze)
     public ResponseEntity<?> getUtentiByPreferenze(String username, int page, int size) {
@@ -112,7 +138,7 @@ public class PreferenzeService {
         Optional<Preferenze> preferenzeOpt = preferenceRepository.findByUtenteId(utente.getId());       
         Preferenze preferenze = preferenzeOpt.orElse(null);
         
-        // Calcola il filtro da applicare al databse in base alle preferenza di età salvate 
+        // Calcola il filtro da applicare al database in base alle preferenza di età salvate 
         LocalDate dataRiferimento = LocalDate.of(LocalDate.now().getYear(), 1, 1); // Prendo come data di riferimento il primo giorno dell'anno
         // Calcolo la data di nascita minima preferita: data di nascita minima = anno corrente - eta minima
         LocalDate dataMin = preferenze != null && preferenze.getMinEta() != null ? dataRiferimento.minusYears(preferenze.getMinEta()) : null;
@@ -135,7 +161,19 @@ public class PreferenzeService {
             pageable
         );
 
-        return ResponseEntity.ok(utenti);
+        // Converte gli utenti in DTO
+        List<UtenteDiscoverDTO> utentiDTO = utenti.stream()
+            .map(u -> new UtenteDiscoverDTO(
+                u.getId(),
+                u.getNome(),
+                u.getBio(),
+                u.getInteressi(),
+                u.getFotoProfilo(),
+                u.getPosizione() != null ? u.getPosizione().getCitta() : null,
+                calcolaEta(u.getDataNascita())
+            ))
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(utentiDTO);
     }   
-	
 }

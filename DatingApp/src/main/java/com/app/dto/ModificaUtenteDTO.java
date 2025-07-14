@@ -17,6 +17,8 @@ public class ModificaUtenteDTO {
 	private String città;
 	private String fotoProfilo;
 	private Boolean notificheAttive;
+	private Double latitudine;
+	private Double longitudine;
 	
 	public ModificaUtenteDTO() {
 		
@@ -97,5 +99,11 @@ public class ModificaUtenteDTO {
 	public void setNotificheAttive(Boolean notificheAttive) {
 		this.notificheAttive = notificheAttive;
 	}
+	
+	public Double getLatitudine() { return latitudine; }
+	public void setLatitudine(Double latitudine) { this.latitudine = latitudine; }
+
+	public Double getLongitudine() { return longitudine; }
+	public void setLongitudine(Double longitudine) { this.longitudine = longitudine; }
 	
 }
