@@ -105,6 +105,7 @@ public class Utente {
 		this.fotoProfilo="";
 		this.notificheAttive = true;
 		this.attivo = false;
+		this.primoAccesso = false;
 	}
 	
 	//includiamo anche Posizione

@@ -62,7 +62,7 @@ public class AuthController {
             // Verifica se l'email è già in uso
             if (utenteService.existsByEmail(registrazioneDto.getEmail())) {
                 return ResponseEntity.badRequest()
-                    .body(new LoginResponse(null, "Email già in uso", null, null));
+                    .body(new LoginResponse(null, "Email già in uso", null, null,null));
             }
  
             // Crea il nuovo utente
@@ -72,12 +72,13 @@ public class AuthController {
                 "Disponibile dopo il login",												// Token vuoto volendo da implementare nuovo modello 
                 "Registrazione completata con successo", 
                 nuovoUtente.getId(),
-                nuovoUtente.getTipoAccount()
+                nuovoUtente.getTipoAccount(),
+                nuovoUtente.isPrimoAccesso()
             ));
  
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(new LoginResponse(null, "Errore durante la registrazione: " + e.getMessage(), null, null));
+                .body(new LoginResponse(null, "Errore durante la registrazione: " + e.getMessage(), null, null,null));
         }
     }
  
@@ -102,6 +103,13 @@ public class AuthController {
  
             // Ottiene i dati dell'utente dal database
             Utente utente = utenteService.findByEmail(loginRequest.getEmail());
+            
+         // 🔥 GESTIONE PRIMO ACCESSO
+            if (!utente.isPrimoAccesso()) { // Se NON ha mai fatto il primo accesso
+                utente.setPrimoAccesso(true); // Segna che ha fatto il primo accesso
+                utenteRepository.save(utente);
+                System.out.println("✅ Primo login completato per: " + utente.getUsername());
+            }
  
             // Genera il token JWT
             String token = jwtUtil.generateToken(
@@ -114,15 +122,16 @@ public class AuthController {
                 token, 
                 "Login effettuato con successo", 
                 utente.getId(),
-                utente.getTipoAccount()
+                utente.getTipoAccount(),
+                utente.isPrimoAccesso()
             ));
  
         } catch (BadCredentialsException e) {
             return ResponseEntity.badRequest()
-                .body(new LoginResponse(null, "Credenziali non valide", null, null));
+                .body(new LoginResponse(null, "Credenziali non valide", null, null,null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(new LoginResponse(null, "Errore durante il login: " + e.getMessage(), null, null));
+                .body(new LoginResponse(null, "Errore durante il login: " + e.getMessage(), null, null,null));
         }
     }
  
@@ -146,15 +155,16 @@ public class AuthController {
                         jwtToken, 
                         "Token valido", 
                         userId,
-                        accountType
+                        accountType,
+                        null
                     ));
                 }
             }
             return ResponseEntity.badRequest()
-                .body(new LoginResponse(null, "Token non valido", null, null));
+                .body(new LoginResponse(null, "Token non valido", null, null,null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(new LoginResponse(null, "Errore nella validazione del token", null, null));
+                .body(new LoginResponse(null, "Errore nella validazione del token", null, null,null));
         }
     }
     
@@ -211,20 +221,21 @@ public class AuthController {
                         null, 
                         "Logout effettuato con successo", 
                         null,
+                        null,
                         null
                     ));
                 } else {
                     return ResponseEntity.badRequest()
-                        .body(new LoginResponse(null, "Token non valido", null, null));
+                        .body(new LoginResponse(null, "Token non valido", null, null,null));
                 }
             }
             
             return ResponseEntity.badRequest()
-                .body(new LoginResponse(null, "Token mancante", null, null));
+                .body(new LoginResponse(null, "Token mancante", null, null,null));
                 
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(new LoginResponse(null, "Errore durante il logout: " + e.getMessage(), null, null));
+                .body(new LoginResponse(null, "Errore durante il logout: " + e.getMessage(), null, null,null));
         }
     }
 }

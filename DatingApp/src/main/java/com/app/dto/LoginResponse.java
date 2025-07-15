@@ -8,15 +8,17 @@ public class LoginResponse {
     private String message;
     private Long userId;
     private String accountType;
+    private Boolean primoAccesso;
  
     // Costruttori
     public LoginResponse() {}
  
-    public LoginResponse(String token, String message, Long userId, String accountType) {
+    public LoginResponse(String token, String message, Long userId, String accountType,Boolean primoAccesso) {
         this.token = token;
         this.message = message;
         this.userId = userId;
         this.accountType = accountType;
+        this.primoAccesso = primoAccesso;
     }
  
     // Getter e Setter
@@ -31,4 +33,14 @@ public class LoginResponse {
  
     public String getAccountType() { return accountType; }
     public void setAccountType(String accountType) { this.accountType = accountType; }
+
+	public Boolean getPrimoAccesso() {
+		return primoAccesso;
+	}
+
+	public void setPrimoAccesso(Boolean primoAccesso) {
+		this.primoAccesso = primoAccesso;
+	}
+    
+    
 }
