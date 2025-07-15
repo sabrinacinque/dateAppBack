@@ -187,4 +187,44 @@ public class AuthController {
                 .build();
         }
     }
+    
+    
+    /**
+     * Endpoint per il logout degli utenti.
+     * POST /api/auth/logout
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
+        try {
+            if (token != null && token.startsWith("Bearer ")) {
+                String jwtToken = token.substring(7);
+                
+                // Verifica che il token sia valido
+                String username = jwtUtil.extractUsername(jwtToken);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                
+                if (jwtUtil.validateToken(jwtToken, userDetails)) {
+                    // Qui potresti aggiungere logica per invalidare il token
+                    // Per ora facciamo un logout "soft" - il frontend rimuoverà il token
+                    
+                    return ResponseEntity.ok(new LoginResponse(
+                        null, 
+                        "Logout effettuato con successo", 
+                        null,
+                        null
+                    ));
+                } else {
+                    return ResponseEntity.badRequest()
+                        .body(new LoginResponse(null, "Token non valido", null, null));
+                }
+            }
+            
+            return ResponseEntity.badRequest()
+                .body(new LoginResponse(null, "Token mancante", null, null));
+                
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new LoginResponse(null, "Errore durante il logout: " + e.getMessage(), null, null));
+        }
+    }
 }
