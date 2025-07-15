@@ -32,14 +32,14 @@ public class EmailService {
 
             try {
                 // ✅ CORRETTO: image/png (NON image/png+xml)
-                ClassPathResource logo = new ClassPathResource("static/assets/lovvami_logo_dark.png");
+                ClassPathResource logo = new ClassPathResource("lovvami_logo_dark.png");
 
                 if (logo.exists()) {
                     helper.addInline("logoLovvami", logo, "image/png");
                     System.out.println("✅ Logo LOVVAMI aggiunto da classpath!");
                 } else {
                     // Fallback locale
-                    java.io.File logoFile = new java.io.File("src/main/resources/static/assets/lovvami_logo_dark.png");
+                    java.io.File logoFile = new java.io.File("src/main/resources/lovvami_logo_dark.png");
                     if (logoFile.exists()) {
                         helper.addInline("logoLovvami", new org.springframework.core.io.FileSystemResource(logoFile), "image/png");
                         System.out.println("✅ Logo LOVVAMI aggiunto da filesystem!");
