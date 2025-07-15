@@ -158,19 +158,33 @@ public class AuthController {
         }
     }
     
-    //ENDPOINT CONFERMA REGISTRAZIONE
+  //ENDPOINT CONFERMA REGISTRAZIONE
     @GetMapping("/confirm")
-    public ResponseEntity<String> confirmUser(@RequestParam("token") String token) {
-        VerificationToken verificationToken = verificationTokenRepository.findByToken(token);
+    public ResponseEntity<Void> confirmUser(@RequestParam("token") String token) {
+        try {
+            VerificationToken verificationToken = verificationTokenRepository.findByToken(token);
 
-        if (verificationToken == null || verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.badRequest().body("Token non valido o scaduto.");
+            if (verificationToken == null || verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+                // Token non valido → redirect con errore
+                return ResponseEntity.status(302)
+                    .header("Location", "http://localhost:4200/confirm?error=true&message=Token%20non%20valido%20o%20scaduto")
+                    .build();
+            }
+
+            Utente utente = verificationToken.getUtente();
+            utente.setAttivo(true);
+            utenteRepository.save(utente);
+
+            // Successo → redirect con conferma
+            return ResponseEntity.status(302)
+                .header("Location", "http://localhost:4200/confirm?success=true")
+                .build();
+                
+        } catch (Exception e) {
+            // Errore generico → redirect con errore
+            return ResponseEntity.status(302)
+                .header("Location", "http://localhost:4200/confirm?error=true&message=" + e.getMessage())
+                .build();
         }
-
-        Utente utente = verificationToken.getUtente();
-        utente.setAttivo(true);
-        utenteRepository.save(utente);
-
-        return ResponseEntity.ok("Email confermata! Ora puoi accedere.");
     }
 }

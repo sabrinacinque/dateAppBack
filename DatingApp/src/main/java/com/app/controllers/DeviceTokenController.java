@@ -11,6 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/device")
+@CrossOrigin(origins = "*")
 public class DeviceTokenController {
 
     @Autowired

@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/utenti")
+@CrossOrigin(origins = "*")
 public class UtentiController {
 
 	@Autowired
