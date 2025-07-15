@@ -62,27 +62,10 @@ public class EmailService {
                         "box-shadow: 0 4px 20px rgba(0,0,0,0.1);" +
                         "text-align: center;" +
                     "}" +
-                    ".logo-lovvami {" +
-                        "font-size: 48px;" +
-                        "font-weight: 900;" +
-                        "margin: 0 auto 30px;" +
-                        "text-align: center;" +
-                        "letter-spacing: 2px;" +
-                    "}" +
-                    ".lov {" +
-                        "color: #e91e63;" +
-                        "position: relative;" +
-                    "}" +
-                    ".lov::after {" +
-                        "content: '♥';" +
-                        "position: absolute;" +
-                        "top: -5px;" +
-                        "right: -8px;" +
-                        "font-size: 20px;" +
-                        "color: #e91e63;" +
-                    "}" +
-                    ".vami {" +
-                        "color: #1976d2;" +
+                    ".logo-img {" +
+                        "max-width: 200px;" +
+                        "height: auto;" +
+                        "margin: 0 auto 20px;" +
                     "}" +
                     "h1 {" +
                         "color: #2c3e50;" +
@@ -132,10 +115,9 @@ public class EmailService {
             "</head>" +
             "<body>" +
                 "<div class=\"container\">" +
-                    "<div class=\"logo-lovvami\">" +
-                        "<span class=\"lov\">LOV</span><span class=\"vami\">VAMI</span>" +
-                    "</div>" +
-                    "<h1>Benvenuto in LOVVAMI!</h1>" +
+                    "<h1>Benvenuto in " +
+                        "<img src=\"https://dateappback-production.up.railway.app/assets/lovvami_logo_dark.svg\" alt=\"LOVVAMI\" class=\"logo-img\">" +
+                    "</h1>" +
                     "<div class=\"welcome-text\">" +
                         "Grazie per esserti registrato! Siamo entusiasti di averti nella nostra community.<br>" +
                         "Per completare la registrazione, conferma il tuo indirizzo email:" +
