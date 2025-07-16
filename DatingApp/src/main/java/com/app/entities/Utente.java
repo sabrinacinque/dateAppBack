@@ -59,7 +59,7 @@ public class Utente {
 	@Embedded
 	private Posizione posizione;
 	
-	@Column(name = "foto_profilo", columnDefinition = "varchar(255)")
+	@Column(name = "foto_profilo", columnDefinition = "TEXT")
 	private String fotoProfilo;
 	
 	@Column(name = "tipo_account", nullable = false, columnDefinition = "varchar(255)")
