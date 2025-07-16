@@ -2,6 +2,8 @@ package com.app.security;
 
 import com.app.services.CustomUserDetailsService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -27,6 +29,9 @@ import java.io.IOException;
  */
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
+	
+    private static final Logger logger = LoggerFactory.getLogger(JwtRequestFilter.class);
+
  
     @Autowired
     private CustomUserDetailsService userDetailsService;

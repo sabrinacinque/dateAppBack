@@ -69,7 +69,8 @@ public class EmailService {
                 <div style="text-align:center; max-width:600px; margin:0 auto; padding:20px; background-color:#f8f9fa;">
                     <div style="background:white; border-radius:12px; padding:40px; box-shadow:0 4px 20px rgba(0,0,0,0.1);">
                     
-                        <h1 style="color:#2c3e50; margin-bottom:20px; font-size:28px;">Benvenuto in </h1>
+                        <h1 style="color:#2c3e50; margin-bottom:20px; font-size:28px;">Benvenuto</h1>
+                        <h1 style="color:#2c3e50; margin-bottom:20px; font-size:28px;">in</h1>
                         
                         <div style="text-align:center; margin-bottom:30px;">
                             <img src='cid:logoLovvami' alt='LOVVAMI' style='width:200px; height:auto; margin:0 auto;'/>
