@@ -111,9 +111,9 @@ public class UtenteService {
 			if( uModificato.getDataNascita() == null)
 				return ResponseEntity.badRequest().body("Non puoi lasciare il campo data di nascita vuoto!");
 			
-			// 🔥 NUOVA LOGICA PASSWORD CON VERIFICA
+			// 🔥 NUOVA LOGICA PASSWORD - SOLO PER CAMBIO PASSWORD
 			if (uModificato.getNewPassword() != null && !uModificato.getNewPassword().trim().isEmpty()) {
-			    // Se viene fornita una nuova password, verifica quella attuale
+			    // CAMBIO PASSWORD - verifica password attuale
 			    if (uModificato.getPassword() == null || uModificato.getPassword().trim().isEmpty()) {
 			        return ResponseEntity.badRequest().body("Inserisci la password attuale per cambiarla!");
 			    }
@@ -130,18 +130,8 @@ public class UtenteService {
 			    
 			    // Aggiorna con la nuova password
 			    uLoggato.setPassword(passwordEncoder.encode(uModificato.getNewPassword().trim()));
-			    
-			} else {
-			    // Se non cambia password, verifica quella attuale per altri aggiornamenti
-			    if (uModificato.getPassword() == null || uModificato.getPassword().length() < 6) {
-			        return ResponseEntity.badRequest().body("Password non valida, deve essere di almeno 6 caratteri!");
-			    }
-			    
-			    // Mantieni la logica esistente per aggiornamenti normali
-			    if (!passwordEncoder.matches(uModificato.getPassword(), uLoggato.getPassword())) {
-			        return ResponseEntity.badRequest().body("Password non corretta!");
-			    }
 			}
+			// 🔥 NESSUNA VERIFICA PASSWORD PER AGGIORNAMENTI NORMALI - L'UTENTE È GIÀ AUTENTICATO CON JWT!
 			
 			uLoggato.setUsername(uModificato.getUsername().trim());
 			
