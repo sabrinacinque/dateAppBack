@@ -203,16 +203,20 @@ public class SwipeService {
         try {
             
         	return utentiWhoLikesMe.stream()
-                    .map(u -> new UtenteDiscoverDTO(
-                            u.getId(),
-                            u.getNome(),
-                            u.getBio(),
-                            u.getInteressi(),
-                            u.getFotoProfilo(),
-                            u.getPosizione() != null ? u.getPosizione().getCitta() : null,
-                            utenteService.calcolaEta(u.getDataNascita())
-                    ))
-                    .collect(Collectors.toList());
+        			.map(u -> new UtenteDiscoverDTO(
+        			        u.getId(),                    // 1. Long id
+        			        u.getNome(),                  // 2. String nome  
+        			        u.getUsername(),              // 3. String username ✅
+        			        u.getGenere() != null ? u.getGenere().toString() : null, // 4. String genere ✅
+        			        u.getDataNascita(),           // 5. LocalDate dataNascita ✅
+        			        u.getBio(),                   // 6. String bio ✅
+        			        u.getInteressi(),             // 7. String interessi ✅
+        			        u.getFotoProfilo(),           // 8. String fotoProfilo ✅
+        			        u.getPosizione() != null ? u.getPosizione().getCitta() : null, // 9. String citta ✅
+        			        utenteService.calcolaEta(u.getDataNascita()), // 10. Integer eta ✅
+        			        u.getNotificheAttive()        // 11. Boolean notificheAttive ✅
+        			    ))
+        			    .collect(Collectors.toList());
             
         } catch (Exception e) {
             throw new RuntimeException("Errore nel recupero dei likes ricevuti", e);

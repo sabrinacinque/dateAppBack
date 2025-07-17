@@ -164,14 +164,18 @@ public class UtenteService {
 			
 			// Ritorna DTO invece dell'entity
 			UtenteDiscoverDTO utenteDTO = new UtenteDiscoverDTO(
-			    uLoggato.getId(),
-			    uLoggato.getNome(),
-			    uLoggato.getBio(),
-			    uLoggato.getInteressi(),
-			    uLoggato.getFotoProfilo(),
-			    uLoggato.getPosizione() != null ? uLoggato.getPosizione().getCitta() : null,
-			    calcolaEta(uLoggato.getDataNascita())
-			);
+				    uLoggato.getId(),                    // 1. Long id
+				    uLoggato.getNome(),                  // 2. String nome
+				    uLoggato.getUsername(),              // 3. String username ✅
+				    uLoggato.getGenere() != null ? uLoggato.getGenere().toString() : null, // 4. String genere ✅
+				    uLoggato.getDataNascita(),           // 5. LocalDate dataNascita ✅
+				    uLoggato.getBio(),                   // 6. String bio ✅
+				    uLoggato.getInteressi(),             // 7. String interessi ✅
+				    uLoggato.getFotoProfilo(),           // 8. String fotoProfilo ✅
+				    uLoggato.getPosizione() != null ? uLoggato.getPosizione().getCitta() : null, // 9. String citta ✅
+				    calcolaEta(uLoggato.getDataNascita()), // 10. Integer eta ✅
+				    uLoggato.getNotificheAttive()        // 11. Boolean notificheAttive ✅
+				);
 			return ResponseEntity.ok(utenteDTO);
 			
     	 } catch (Exception e) {
@@ -211,14 +215,18 @@ public class UtenteService {
 	        .orElseThrow(() -> new RuntimeException("Utente non trovato"));
 	    
 	    UtenteDiscoverDTO profiloDTO = new UtenteDiscoverDTO(
-	        utente.getId(),
-	        utente.getNome(),
-	        utente.getBio(),
-	        utente.getInteressi(),
-	        utente.getFotoProfilo(),
-	        utente.getPosizione() != null ? utente.getPosizione().getCitta() : null,
-	        calcolaEta(utente.getDataNascita())
-	    );
+	    	    utente.getId(),                    // 1. Long id
+	    	    utente.getNome(),                  // 2. String nome
+	    	    utente.getUsername(),              // 3. String username ✅
+	    	    utente.getGenere() != null ? utente.getGenere().toString() : null, // 4. String genere ✅
+	    	    utente.getDataNascita(),           // 5. LocalDate dataNascita ✅
+	    	    utente.getBio(),                   // 6. String bio ✅
+	    	    utente.getInteressi(),             // 7. String interessi ✅
+	    	    utente.getFotoProfilo(),           // 8. String fotoProfilo ✅
+	    	    utente.getPosizione() != null ? utente.getPosizione().getCitta() : null, // 9. String citta ✅
+	    	    calcolaEta(utente.getDataNascita()), // 10. Integer eta ✅
+	    	    utente.getNotificheAttive()        // 11. Boolean notificheAttive ✅
+	    	);
 	    
 	    return profiloDTO;
 	}

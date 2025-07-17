@@ -1,27 +1,35 @@
 package com.app.dto;
 
+import java.time.LocalDate;
+
 public class UtenteDiscoverDTO {
-    
     private Long id;
     private String nome;
+    private String username; // 🔥 AGGIUNGI - Email dell'utente
+    private String genere; // 🔥 AGGIUNGI - Genere
+    private LocalDate dataNascita; // 🔥 AGGIUNGI - Data nascita
     private String bio;
     private String interessi;
     private String fotoProfilo;
     private String citta;
-    private Integer eta;  // Calcolata dall'età
-    
-    // ========== COSTRUTTORI ==========
-    public UtenteDiscoverDTO() {}
-    
-    public UtenteDiscoverDTO(Long id, String nome, String bio, String interessi, 
-                           String fotoProfilo, String citta, Integer eta) {
+    private Integer eta;
+    private Boolean notificheAttive; // 🔥 AGGIUNGI - Notifiche
+
+    // Costruttore aggiornato
+    public UtenteDiscoverDTO(Long id, String nome, String username, String genere, 
+                           LocalDate dataNascita, String bio, String interessi,
+                           String fotoProfilo, String citta, Integer eta, Boolean notificheAttive) {
         this.id = id;
         this.nome = nome;
+        this.username = username; // 🔥 AGGIUNGI
+        this.genere = genere; // 🔥 AGGIUNGI  
+        this.dataNascita = dataNascita; // 🔥 AGGIUNGI
         this.bio = bio;
         this.interessi = interessi;
         this.fotoProfilo = fotoProfilo;
         this.citta = citta;
         this.eta = eta;
+        this.notificheAttive = notificheAttive; // 🔥 AGGIUNGI
     }
     
     // ========== GETTER E SETTER ==========
@@ -81,7 +89,39 @@ public class UtenteDiscoverDTO {
         this.eta = eta;
     }
     
-    @Override
+    public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getGenere() {
+		return genere;
+	}
+
+	public void setGenere(String genere) {
+		this.genere = genere;
+	}
+
+	public LocalDate getDataNascita() {
+		return dataNascita;
+	}
+
+	public void setDataNascita(LocalDate dataNascita) {
+		this.dataNascita = dataNascita;
+	}
+
+	public Boolean getNotificheAttive() {
+		return notificheAttive;
+	}
+
+	public void setNotificheAttive(Boolean notificheAttive) {
+		this.notificheAttive = notificheAttive;
+	}
+
+	@Override
     public String toString() {
         return "UtenteDiscoverDTO{" +
                 "id=" + id +

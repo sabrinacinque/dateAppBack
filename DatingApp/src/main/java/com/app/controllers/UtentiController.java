@@ -65,11 +65,20 @@ public class UtentiController {
 			// Carica il profilo completo dell'utente
 			Utente utente = utenteService.findByEmail(currentUserEmail);
 
-			// Crea un DTO invece di ritornare l'entity
-			UtenteDiscoverDTO utenteDTO = new UtenteDiscoverDTO(utente.getId(), utente.getNome(), utente.getBio(),
-					utente.getInteressi(), utente.getFotoProfilo(),
-					utente.getPosizione() != null ? utente.getPosizione().getCitta() : null,
-					utenteService.calcolaEta(utente.getDataNascita()));
+			
+	        UtenteDiscoverDTO utenteDTO = new UtenteDiscoverDTO(
+	            utente.getId(), 
+	            utente.getNome(), 
+	            utente.getUsername(), // 🔥 AGGIUNGI - Email
+	            utente.getGenere() != null ? utente.getGenere().toString() : null, // 🔥 AGGIUNGI - Genere
+	            utente.getDataNascita(), // 🔥 AGGIUNGI - Data nascita
+	            utente.getBio(),
+	            utente.getInteressi(), 
+	            utente.getFotoProfilo(),
+	            utente.getPosizione() != null ? utente.getPosizione().getCitta() : null,
+	            utenteService.calcolaEta(utente.getDataNascita()),
+	            utente.getNotificheAttive() // 🔥 AGGIUNGI - Notifiche
+	        );
 
 			return ResponseEntity.ok(utenteDTO);
 
@@ -192,19 +201,23 @@ public class UtentiController {
 	        
 	        List<Utente> tuttiUtenti = utenteRepository.findAll();
 	        
-	        // Converte in DTO
+	     // Converte in DTO
 	        List<UtenteDiscoverDTO> utentiDTO = tuttiUtenti.stream()
 	            .map(utente -> new UtenteDiscoverDTO(
 	                utente.getId(),
 	                utente.getNome(),
-	                utente.getBio(),
-	                utente.getInteressi(),
-	                utente.getFotoProfilo(),
-	                utente.getPosizione() != null ? utente.getPosizione().getCitta() : null,
-	                utenteService.calcolaEta(utente.getDataNascita())
+	                utente.getUsername(), // 🔥 PARAMETRO 3 - Email
+	                utente.getGenere() != null ? utente.getGenere().toString() : null, // 🔥 PARAMETRO 4 - Genere
+	                utente.getDataNascita(), // 🔥 PARAMETRO 5 - Data nascita
+	                utente.getBio(), // 🔥 PARAMETRO 6 - Bio
+	                utente.getInteressi(), // 🔥 PARAMETRO 7 - Interessi
+	                utente.getFotoProfilo(), // 🔥 PARAMETRO 8 - Foto
+	                utente.getPosizione() != null ? utente.getPosizione().getCitta() : null, // 🔥 PARAMETRO 9 - Città
+	                utenteService.calcolaEta(utente.getDataNascita()), // 🔥 PARAMETRO 10 - Età
+	                utente.getNotificheAttive() // 🔥 PARAMETRO 11 - Notifiche
 	            ))
 	            .collect(Collectors.toList());
-	            
+
 	        return ResponseEntity.ok(utentiDTO);
 	        
 	    } catch (Exception e) {

@@ -163,17 +163,21 @@ public class PreferenzeService {
 
         // Converte gli utenti in DTO
         List<UtenteDiscoverDTO> utentiDTO = utenti.stream()
-            .map(u -> new UtenteDiscoverDTO(
-                u.getId(),
-                u.getNome(),
-                u.getBio(),
-                u.getInteressi(),
-                u.getFotoProfilo(),
-                u.getPosizione() != null ? u.getPosizione().getCitta() : null,
-                calcolaEta(u.getDataNascita())
-            ))
-            .collect(Collectors.toList());
+        	    .map(u -> new UtenteDiscoverDTO(
+        	        u.getId(),                    // 1. Long id
+        	        u.getNome(),                  // 2. String nome  
+        	        u.getUsername(),              // 3. String username ✅
+        	        u.getGenere() != null ? u.getGenere().toString() : null, // 4. String genere ✅
+        	        u.getDataNascita(),           // 5. LocalDate dataNascita ✅
+        	        u.getBio(),                   // 6. String bio ✅
+        	        u.getInteressi(),             // 7. String interessi ✅
+        	        u.getFotoProfilo(),           // 8. String fotoProfilo ✅
+        	        u.getPosizione() != null ? u.getPosizione().getCitta() : null, // 9. String citta ✅
+        	        calcolaEta(u.getDataNascita()), // 10. Integer eta ✅
+        	        u.getNotificheAttive()        // 11. Boolean notificheAttive ✅
+        	    ))
+        	    .collect(Collectors.toList());
 
-        return ResponseEntity.ok(utentiDTO);
+        	return ResponseEntity.ok(utentiDTO);
     }   
 }
