@@ -10,6 +10,7 @@ public class ModificaUtenteDTO {
 	private String nome;
 	private String username;
 	private String password;
+	private String newPassword;
 	private Genere genere;
 	private LocalDate dataNascita;
 	private String bio;
@@ -24,12 +25,13 @@ public class ModificaUtenteDTO {
 		
 	}
 	
-	public ModificaUtenteDTO(String nome, String username, String password, Genere genere, LocalDate dataNascita,
+	public ModificaUtenteDTO(String nome, String username, String password,String newPassword, Genere genere, LocalDate dataNascita,
 			String bio, String interessi, String città, String fotoProfilo, Boolean notificheAttive) {
 		super();
 		this.nome = nome;
 		this.username = username;
 		this.password = password;
+		this.newPassword = newPassword;
 		this.genere = genere;
 		this.dataNascita = dataNascita;
 		this.bio = bio;
@@ -57,6 +59,16 @@ public class ModificaUtenteDTO {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+	
+	
+	public String getNewPassword() {
+		return newPassword;
+	}
+
+	public void setNewPassword(String newPassword) {
+		this.newPassword = newPassword;
+	}
+
 	public Genere getGenere() {
 		return genere;
 	}

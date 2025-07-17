@@ -108,15 +108,40 @@ public class UtenteService {
 				 }
 			}
 			
-			if ( uModificato.getPassword() == null || uModificato.getPassword().length() < 6 )
-				return ResponseEntity.badRequest().body("Password non valida, deve essere di almeno 6 caratteri!");
-			
 			if( uModificato.getDataNascita() == null)
 				return ResponseEntity.badRequest().body("Non puoi lasciare il campo data di nascita vuoto!");
 			
-			// Aggiorna solo i campi che possono essere modificati dall'utente
-			if (!passwordEncoder.matches(uModificato.getPassword(), uLoggato.getPassword()))
-			uLoggato.setPassword(passwordEncoder.encode(uModificato.getPassword().trim()));
+			// 🔥 NUOVA LOGICA PASSWORD CON VERIFICA
+			if (uModificato.getNewPassword() != null && !uModificato.getNewPassword().trim().isEmpty()) {
+			    // Se viene fornita una nuova password, verifica quella attuale
+			    if (uModificato.getPassword() == null || uModificato.getPassword().trim().isEmpty()) {
+			        return ResponseEntity.badRequest().body("Inserisci la password attuale per cambiarla!");
+			    }
+			    
+			    // Verifica che la password attuale sia corretta
+			    if (!passwordEncoder.matches(uModificato.getPassword(), uLoggato.getPassword())) {
+			        return ResponseEntity.badRequest().body("Password attuale non corretta!");
+			    }
+			    
+			    // Verifica nuova password
+			    if (uModificato.getNewPassword().length() < 6) {
+			        return ResponseEntity.badRequest().body("La nuova password deve essere di almeno 6 caratteri!");
+			    }
+			    
+			    // Aggiorna con la nuova password
+			    uLoggato.setPassword(passwordEncoder.encode(uModificato.getNewPassword().trim()));
+			    
+			} else {
+			    // Se non cambia password, verifica quella attuale per altri aggiornamenti
+			    if (uModificato.getPassword() == null || uModificato.getPassword().length() < 6) {
+			        return ResponseEntity.badRequest().body("Password non valida, deve essere di almeno 6 caratteri!");
+			    }
+			    
+			    // Mantieni la logica esistente per aggiornamenti normali
+			    if (!passwordEncoder.matches(uModificato.getPassword(), uLoggato.getPassword())) {
+			        return ResponseEntity.badRequest().body("Password non corretta!");
+			    }
+			}
 			
 			uLoggato.setUsername(uModificato.getUsername().trim());
 			
@@ -178,9 +203,9 @@ public class UtenteService {
 				);
 			return ResponseEntity.ok(utenteDTO);
 			
-    	 } catch (Exception e) {
-    		 return ResponseEntity.badRequest().body("Errore nell'aggiornamento del profilo: " + e.getMessage());
-    	 }	    
+		 } catch (Exception e) {
+			 return ResponseEntity.badRequest().body("Errore nell'aggiornamento del profilo: " + e.getMessage());
+		 }	    
 	}
 		
 	//UPDATE COORDINATE
