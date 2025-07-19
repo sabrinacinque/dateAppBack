@@ -10,6 +10,13 @@ import com.app.repositories.VerificationTokenRepository;
 import com.app.security.JwtUtil;
 import com.app.services.UtenteService;
 
+import com.app.entities.PasswordResetToken;
+import com.app.repositories.PasswordResetTokenRepository;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
@@ -22,6 +29,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
  
 /**
  * Controller per gestire autenticazione e registrazione degli utenti.
@@ -45,6 +54,12 @@ public class AuthController {
     
     @Autowired
     private JwtUtil jwtUtil;
+    
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
  
     @Autowired
@@ -236,6 +251,97 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(new LoginResponse(null, "Errore durante il logout: " + e.getMessage(), null, null,null));
+        }
+    }
+    
+    
+ // 🔥 ENDPOINT RECUPERO PASSWORD
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Email richiesta");
+        }
+        
+        try {
+            // Cerca l'utente nel database
+            Optional<Utente> utenteOpt = utenteRepository.findByUsername(email);
+            
+            if (utenteOpt.isEmpty()) {
+                // Per sicurezza, rispondi sempre OK anche se l'email non esiste
+                return ResponseEntity.ok().body("Se l'email esiste, riceverai il link di reset");
+            }
+            
+            // Invalida eventuali token precedenti per questa email
+            passwordResetTokenRepository.invalidateAllTokensForEmail(email);
+            
+            // Genera nuovo token
+            String token = UUID.randomUUID().toString();
+            PasswordResetToken resetToken = new PasswordResetToken(token, email);
+            passwordResetTokenRepository.save(resetToken);
+            
+            // Per ora logga il token (dopo implementeremo l'email)
+            System.out.println("🔑 Token di reset per " + email + ": " + token);
+            System.out.println("🔗 Link di reset: http://localhost:4200/reset-password?token=" + token);
+            
+            return ResponseEntity.ok().body("Se l'email esiste, riceverai il link di reset");
+            
+        } catch (Exception e) {
+            System.err.println("❌ Errore forgot password: " + e.getMessage());
+            return ResponseEntity.status(500).body("Errore interno del server");
+        }
+    }
+
+    // 🔥 ENDPOINT RESET PASSWORD
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String token = request.get("token");
+        String newPassword = request.get("newPassword");
+        
+        if (token == null || newPassword == null || newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body("Token e password (min 6 caratteri) richiesti");
+        }
+        
+        try {
+            // Cerca il token
+            Optional<PasswordResetToken> tokenOpt = passwordResetTokenRepository.findByToken(token);
+            
+            if (tokenOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("Token non valido");
+            }
+            
+            PasswordResetToken resetToken = tokenOpt.get();
+            
+            // Verifica che il token sia valido
+            if (!resetToken.isValid()) {
+                return ResponseEntity.badRequest().body("Token scaduto o già utilizzato");
+            }
+            
+            // Cerca l'utente
+            Optional<Utente> utenteOpt = utenteRepository.findByUsername(resetToken.getEmail());
+            
+            if (utenteOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("Utente non trovato");
+            }
+            
+            Utente utente = utenteOpt.get();
+            
+            // Aggiorna la password
+            utente.setPassword(passwordEncoder.encode(newPassword));
+            utenteRepository.save(utente);
+            
+            // Marca token come usato
+            resetToken.markAsUsed();
+            passwordResetTokenRepository.save(resetToken);
+            
+            System.out.println("✅ Password reset completato per: " + utente.getUsername());
+            
+            return ResponseEntity.ok().body("Password aggiornata con successo");
+            
+        } catch (Exception e) {
+            System.err.println("❌ Errore reset password: " + e.getMessage());
+            return ResponseEntity.status(500).body("Errore interno del server");
         }
     }
 }
