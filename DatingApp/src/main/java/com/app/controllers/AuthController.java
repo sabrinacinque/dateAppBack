@@ -255,13 +255,13 @@ public class AuthController {
     }
     
     
- // 🔥 ENDPOINT RECUPERO PASSWORD
+ // 🔥 ENDPOINT RECUPERO PASSWORD - VERSIONE CORRETTA
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         
         if (email == null || email.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Email richiesta");
+            return ResponseEntity.badRequest().body(Map.of("message", "Email richiesta"));
         }
         
         try {
@@ -270,7 +270,7 @@ public class AuthController {
             
             if (utenteOpt.isEmpty()) {
                 // Per sicurezza, rispondi sempre OK anche se l'email non esiste
-                return ResponseEntity.ok().body("Se l'email esiste, riceverai il link di reset");
+                return ResponseEntity.ok().body(Map.of("message", "Se l'email esiste, riceverai il link di reset"));
             }
             
             // Invalida eventuali token precedenti per questa email
@@ -285,22 +285,22 @@ public class AuthController {
             System.out.println("🔑 Token di reset per " + email + ": " + token);
             System.out.println("🔗 Link di reset: http://localhost:4200/reset-password?token=" + token);
             
-            return ResponseEntity.ok().body("Se l'email esiste, riceverai il link di reset");
+            return ResponseEntity.ok().body(Map.of("message", "Se l'email esiste, riceverai il link di reset"));
             
         } catch (Exception e) {
             System.err.println("❌ Errore forgot password: " + e.getMessage());
-            return ResponseEntity.status(500).body("Errore interno del server");
+            return ResponseEntity.status(500).body(Map.of("message", "Errore interno del server"));
         }
     }
 
-    // 🔥 ENDPOINT RESET PASSWORD
+    // 🔥 ENDPOINT RESET PASSWORD - VERSIONE CORRETTA
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
         String token = request.get("token");
         String newPassword = request.get("newPassword");
         
         if (token == null || newPassword == null || newPassword.length() < 6) {
-            return ResponseEntity.badRequest().body("Token e password (min 6 caratteri) richiesti");
+            return ResponseEntity.badRequest().body(Map.of("message", "Token e password (min 6 caratteri) richiesti"));
         }
         
         try {
@@ -308,21 +308,21 @@ public class AuthController {
             Optional<PasswordResetToken> tokenOpt = passwordResetTokenRepository.findByToken(token);
             
             if (tokenOpt.isEmpty()) {
-                return ResponseEntity.badRequest().body("Token non valido");
+                return ResponseEntity.badRequest().body(Map.of("message", "Token non valido"));
             }
             
             PasswordResetToken resetToken = tokenOpt.get();
             
             // Verifica che il token sia valido
             if (!resetToken.isValid()) {
-                return ResponseEntity.badRequest().body("Token scaduto o già utilizzato");
+                return ResponseEntity.badRequest().body(Map.of("message", "Token scaduto o già utilizzato"));
             }
             
             // Cerca l'utente
             Optional<Utente> utenteOpt = utenteRepository.findByUsername(resetToken.getEmail());
             
             if (utenteOpt.isEmpty()) {
-                return ResponseEntity.badRequest().body("Utente non trovato");
+                return ResponseEntity.badRequest().body(Map.of("message", "Utente non trovato"));
             }
             
             Utente utente = utenteOpt.get();
@@ -337,11 +337,11 @@ public class AuthController {
             
             System.out.println("✅ Password reset completato per: " + utente.getUsername());
             
-            return ResponseEntity.ok().body("Password aggiornata con successo");
+            return ResponseEntity.ok().body(Map.of("message", "Password aggiornata con successo"));
             
         } catch (Exception e) {
             System.err.println("❌ Errore reset password: " + e.getMessage());
-            return ResponseEntity.status(500).body("Errore interno del server");
+            return ResponseEntity.status(500).body(Map.of("message", "Errore interno del server"));
         }
     }
 }
