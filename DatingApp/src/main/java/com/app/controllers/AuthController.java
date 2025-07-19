@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
+import com.app.services.EmailService;
 import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
@@ -64,6 +64,9 @@ public class AuthController {
  
     @Autowired
     private UtenteService utenteService;
+    
+    @Autowired
+    private EmailService emailService;
  
     /**
      * Endpoint per la registrazione di un nuovo utente.
@@ -255,7 +258,7 @@ public class AuthController {
     }
     
     
- // 🔥 ENDPOINT RECUPERO PASSWORD - VERSIONE CORRETTA
+ // 🔥 ENDPOINT RECUPERO PASSWORD CON INVIO EMAIL
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
@@ -281,9 +284,14 @@ public class AuthController {
             PasswordResetToken resetToken = new PasswordResetToken(token, email);
             passwordResetTokenRepository.save(resetToken);
             
-            // Per ora logga il token (dopo implementeremo l'email)
-            System.out.println("🔑 Token di reset per " + email + ": " + token);
-            System.out.println("🔗 Link di reset: http://localhost:4200/reset-password?token=" + token);
+            // 🔥 INVIA EMAIL REALE
+            try {
+                emailService.sendPasswordResetEmail(email, token);
+                System.out.println("✅ Email di reset inviata a: " + email);
+            } catch (Exception emailError) {
+                System.err.println("❌ Errore invio email: " + emailError.getMessage());
+                // Continua comunque, il token è salvato
+            }
             
             return ResponseEntity.ok().body(Map.of("message", "Se l'email esiste, riceverai il link di reset"));
             

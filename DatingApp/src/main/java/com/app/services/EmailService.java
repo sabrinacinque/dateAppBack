@@ -136,4 +136,94 @@ public class EmailService {
         
         mailSender.send(message);
     }
+    
+    
+    public void sendPasswordResetEmail(String to, String resetToken) {
+        try {
+            String subject = "🔑 Reset Password - LOVVAMI ❤️";
+            String resetUrl = "http://localhost:4200/reset-password?token=" + resetToken;
+            
+            String htmlBody = createPasswordResetEmailTemplate(resetUrl, to);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText("Reset Password LOVVAMI", htmlBody);
+            helper.setFrom("LOVVAMI <emailtestingapp2025@gmail.com>");
+
+            // Aggiungi logo se esiste
+            try {
+                ClassPathResource logo = new ClassPathResource("lovvami_logo_dark.png");
+                if (logo.exists()) {
+                    helper.addInline("logoLovvami", logo, "image/png");
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Errore logo: " + e.getMessage());
+            }
+
+            mailSender.send(message);
+            System.out.println("✅ Email reset password inviata a: " + to);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Errore invio email reset: " + e.getMessage());
+            // Fallback email semplice
+            sendSimplePasswordResetEmail(to, resetToken);
+        }
+    }
+
+    // Template HTML per reset password
+    private String createPasswordResetEmailTemplate(String resetUrl, String email) {
+        return String.format("""
+            <html>
+            <body>
+                <div style="text-align:center; max-width:600px; margin:0 auto; padding:20px; background-color:#f8f9fa;">
+                    <div style="background:white; border-radius:12px; padding:40px; box-shadow:0 4px 20px rgba(0,0,0,0.1);">
+                    
+                        <div style="text-align:center; margin-bottom:30px;">
+                            <img src='cid:logoLovvami' alt='LOVVAMI' style='width:200px; height:auto; margin:0 auto;'/>
+                        </div>
+                        
+                        <h1 style="color:#2c3e50; margin-bottom:20px; font-size:28px;">🔑 Reset Password</h1>
+                        
+                        <div style="font-size:18px; color:#666; margin-bottom:30px; line-height:1.5;">
+                            Hai richiesto di reimpostare la password per: <strong>%s</strong><br><br>
+                            Clicca sul pulsante qui sotto per creare una nuova password:
+                        </div>
+                        
+                        <a href="%s" style="display:inline-block; background:#E41196; color:#fff; padding:15px 40px; text-decoration:none; border-radius:25px; font-weight:bold; font-size:16px; margin:20px 0;">
+                            🔑 Reimposta Password
+                        </a>
+                        
+                        <div style="font-size:14px; color:#888; margin-top:30px; padding-top:20px; border-top:1px solid #eee;">
+                            ⏰ <strong>Questo link scadrà tra 1 ora</strong> per motivi di sicurezza.<br><br>
+                            Se non hai richiesto questo reset, ignora questa email.
+                        </div>
+
+                        <div style="margin-top:30px; font-size:12px; color:#aaa;">
+                            <strong>Team LOVVAMI ❤️</strong>
+                        </div>
+
+                    </div>
+                </div>
+            </body>
+            </html>
+            """, email, resetUrl);
+    }
+
+    // Fallback email semplice
+    private void sendSimplePasswordResetEmail(String to, String resetToken) {
+        String subject = "Reset Password - LOVVAMI";
+        String resetUrl = "http://localhost:4200/reset-password?token=" + resetToken;
+        String body = "Clicca sul link per reimpostare la password: " + resetUrl;
+        
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(body);
+        message.setFrom("emailtestingapp2025@gmail.com");
+        
+        mailSender.send(message);
+    }
 }
