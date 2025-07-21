@@ -1,4 +1,5 @@
 package com.app.services;
+
 import com.app.services.FirebaseService;
 import com.app.entities.Match;
 import com.app.entities.Messaggio;
@@ -43,13 +44,18 @@ public class MessaggioService {
             Utente utente = utenteRepository.findByUsername(emailUtente)
                 .orElseThrow(() -> new EntityNotFoundException("Utente non trovato"));
             
+            System.out.println("Utente trovato - ID: " + utente.getId());
+            
             // Trova il match
             Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new EntityNotFoundException("Match non trovato"));
             
-            // Verifica che l'utente faccia parte del match
-            if (!match.getUtente1().equals(utente) && 
-                !match.getUtente2().equals(utente)) {
+            System.out.println("Match trovato - Utente1 ID: " + match.getUtente1().getId() + 
+                             ", Utente2 ID: " + match.getUtente2().getId());
+            
+            // 🔥 VERIFICA AUTORIZZAZIONE - CONFRONTO ID INVECE DI OGGETTI
+            if (!match.getUtente1().getId().equals(utente.getId()) && 
+                !match.getUtente2().getId().equals(utente.getId())) {
                 throw new IllegalArgumentException("Non sei autorizzato a vedere questa chat");
             }
             
@@ -60,12 +66,12 @@ public class MessaggioService {
             
             System.out.println("Messaggi trovati: " + messaggi.size());
             
-            // SETTIAMO I TUTTI I MESSAGGI RICEVUTI COME LETTI
-            
+            // SETTIAMO TUTTI I MESSAGGI RICEVUTI COME LETTI
             List<Messaggio> messaggiDaAggiornare = new ArrayList<>();
 
             for (Messaggio m : messaggi) {
-                if (!m.getMittente().equals(utente) && !m.getStato().equals("letto")) {
+                // 🔥 CONFRONTO ID INVECE DI OGGETTI ANCHE QUI
+                if (!m.getMittente().getId().equals(utente.getId()) && !m.getStato().equals("letto")) {
                     messaggiDaAggiornare.add(m);
                 }
             }
@@ -74,15 +80,21 @@ public class MessaggioService {
                 m.setStato("letto");
             }
 
-            messaggioRepository.saveAll(messaggiDaAggiornare);
-            
+            if (!messaggiDaAggiornare.isEmpty()) {
+                messaggioRepository.saveAll(messaggiDaAggiornare);
+                System.out.println("Aggiornati " + messaggiDaAggiornare.size() + " messaggi come letti");
+            }
             
             return messaggi.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
                 
         } catch (DataAccessException e) {
+            System.err.println("Errore database nel recupero messaggi: " + e.getMessage());
             throw new RuntimeException("Errore recupero messaggi", e);
+        } catch (Exception e) {
+            System.err.println("Errore generico nel recupero messaggi: " + e.getMessage());
+            throw e;
         }
     }
     
@@ -99,12 +111,18 @@ public class MessaggioService {
             Utente mittente = utenteRepository.findByUsername(emailMittente)
                 .orElseThrow(() -> new EntityNotFoundException("Utente mittente non trovato"));
             
+            System.out.println("Mittente trovato - ID: " + mittente.getId());
+            
             // Trova il match
             Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new EntityNotFoundException("Match non trovato"));
             
-            // Verifica che il mittente faccia parte del match
-            if (!match.getUtente1().equals(mittente)) {
+            System.out.println("Match trovato - Utente1 ID: " + match.getUtente1().getId() + 
+                             ", Utente2 ID: " + match.getUtente2().getId());
+            
+            // 🔥 VERIFICA AUTORIZZAZIONE - CONFRONTO ID INVECE DI OGGETTI
+            if (!match.getUtente1().getId().equals(mittente.getId()) && 
+                !match.getUtente2().getId().equals(mittente.getId())) {
                 throw new IllegalArgumentException("Non sei autorizzato a scrivere in questa chat");
             }
             
@@ -128,15 +146,21 @@ public class MessaggioService {
             messaggioRepository.save(messaggio);
             System.out.println("Messaggio salvato con successo!");
             
-            // Trovo il destinatario del messaggio
-            Long destinatarioId = match.getUtente1().getId().equals(mittente) ?
-            		match.getUtente2().getId() : match.getUtente1().getId();
+            // 🔥 TROVA IL DESTINATARIO - CONFRONTO ID INVECE DI OGGETTI
+            Long destinatarioId = match.getUtente1().getId().equals(mittente.getId()) ?
+                match.getUtente2().getId() : match.getUtente1().getId();
             
-            // invio notifica Firebase al destinatario
+            System.out.println("Invio notifica Firebase al destinatario ID: " + destinatarioId);
+            
+            // Invio notifica Firebase al destinatario
             firebaseService.inviaNotificaMessaggio(destinatarioId, mittente.getNome(), dto.getContenuto());
             
         } catch (DataAccessException e) {
+            System.err.println("Errore database nel salvataggio messaggio: " + e.getMessage());
             throw new RuntimeException("Errore salvataggio messaggio", e);
+        } catch (Exception e) {
+            System.err.println("Errore generico nell'invio messaggio: " + e.getMessage());
+            throw e;
         }
     }
     
