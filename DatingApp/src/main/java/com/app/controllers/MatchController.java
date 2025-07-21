@@ -97,10 +97,12 @@ public class MatchController {
                                                 @RequestBody MessaggioDTO messaggioDTO,
                                                 @AuthenticationPrincipal UserDetails userDetails) {
 
-        System.out.println("=== INVIA MESSAGGIO DEBUG ===");
+        System.out.println("=== CONTROLLER DEBUG ===");
         System.out.println("Match ID: " + matchId);
         System.out.println("User: " + userDetails.getUsername());
-        System.out.println("Messaggio: " + messaggioDTO.getContenuto());
+        System.out.println("DTO contenuto: " + messaggioDTO.getContenuto());
+        System.out.println("DTO mittenteId: " + messaggioDTO.getMittenteId()); // Dovrebbe essere null
+        System.out.println("DTO stato: " + messaggioDTO.getStato());
 
         try {
             messaggioService.inviaMessaggio(matchId, messaggioDTO, userDetails.getUsername());
