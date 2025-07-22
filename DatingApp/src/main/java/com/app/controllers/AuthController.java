@@ -108,6 +108,21 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
+            
+            // 🔥 PRIMA CONTROLLA SE L'UTENTE ESISTE E È ATTIVO
+            Utente utente = utenteService.findByEmail(loginRequest.getEmail());
+            
+            if (utente == null) {
+                return ResponseEntity.badRequest()
+                    .body(new LoginResponse(null, "Credenziali non valide", null, null, null));
+            }
+            
+            // 🔥 CONTROLLO ACCOUNT ATTIVO
+            if (!utente.isAttivo()) {
+                return ResponseEntity.badRequest()
+                    .body(new LoginResponse(null, "Account non attivato. Controlla la tua email per attivare l'account.", null, null, null));
+            }
+            
             // Autentica l'utente usando email e password
             authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -115,27 +130,21 @@ public class AuthController {
                     loginRequest.getPassword()
                 )
             );
- 
-            // Se l'autenticazione ha successo, carica i dettagli dell'utente
-            //UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getEmail());
- 
-            // Ottiene i dati dell'utente dal database
-            Utente utente = utenteService.findByEmail(loginRequest.getEmail());
-            
-         // 🔥 GESTIONE PRIMO ACCESSO
+
+            // 🔥 GESTIONE PRIMO ACCESSO
             if (!utente.isPrimoAccesso()) { // Se NON ha mai fatto il primo accesso
                 utente.setPrimoAccesso(true); // Segna che ha fatto il primo accesso
                 utenteRepository.save(utente);
                 System.out.println("✅ Primo login completato per: " + utente.getUsername());
             }
- 
+
             // Genera il token JWT
             String token = jwtUtil.generateToken(
                 utente.getId(), 
                 utente.getUsername(), 
                 utente.getTipoAccount()
             );
- 
+
             return ResponseEntity.ok(new LoginResponse(
                 token, 
                 "Login effettuato con successo", 
@@ -143,13 +152,13 @@ public class AuthController {
                 utente.getTipoAccount(),
                 utente.isPrimoAccesso()
             ));
- 
+
         } catch (BadCredentialsException e) {
             return ResponseEntity.badRequest()
-                .body(new LoginResponse(null, "Credenziali non valide", null, null,null));
+                .body(new LoginResponse(null, "Credenziali non valide", null, null, null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(new LoginResponse(null, "Errore durante il login: " + e.getMessage(), null, null,null));
+                .body(new LoginResponse(null, "Errore durante il login: " + e.getMessage(), null, null, null));
         }
     }
  

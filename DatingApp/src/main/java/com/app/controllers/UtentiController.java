@@ -11,6 +11,7 @@ import com.app.services.UtenteService;
 import com.app.utils.SecurityUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder; // 🔥 IMPORT AGGIUNTO
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -44,6 +46,9 @@ public class UtentiController {
 
 	@Autowired
 	private SwipeService swipeService;
+	
+	@Autowired
+	private PasswordEncoder passwordEncoder; // 🔥 BEAN AGGIUNTO
 
 	Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -51,7 +56,6 @@ public class UtentiController {
 	 * Endpoint per ottenere il profilo dell'utente corrente. Accessibile solo agli
 	 * utenti autenticati. GET /api/utenti/me
 	 */
-
 	@GetMapping("/me")
 	public ResponseEntity<?> getMyProfile() {
 		try {
@@ -65,20 +69,19 @@ public class UtentiController {
 			// Carica il profilo completo dell'utente
 			Utente utente = utenteService.findByEmail(currentUserEmail);
 
-			
-	        UtenteDiscoverDTO utenteDTO = new UtenteDiscoverDTO(
-	            utente.getId(), 
-	            utente.getNome(), 
-	            utente.getUsername(), // 🔥 AGGIUNGI - Email
-	            utente.getGenere() != null ? utente.getGenere().toString() : null, // 🔥 AGGIUNGI - Genere
-	            utente.getDataNascita(), // 🔥 AGGIUNGI - Data nascita
-	            utente.getBio(),
-	            utente.getInteressi(), 
-	            utente.getFotoProfilo(),
-	            utente.getPosizione() != null ? utente.getPosizione().getCitta() : null,
-	            utenteService.calcolaEta(utente.getDataNascita()),
-	            utente.getNotificheAttive() // 🔥 AGGIUNGI - Notifiche
-	        );
+			UtenteDiscoverDTO utenteDTO = new UtenteDiscoverDTO(
+				utente.getId(), 
+				utente.getNome(), 
+				utente.getUsername(), // Email
+				utente.getGenere() != null ? utente.getGenere().toString() : null, // Genere
+				utente.getDataNascita(), // Data nascita
+				utente.getBio(),
+				utente.getInteressi(), 
+				utente.getFotoProfilo(),
+				utente.getPosizione() != null ? utente.getPosizione().getCitta() : null,
+				utenteService.calcolaEta(utente.getDataNascita()),
+				utente.getNotificheAttive() // Notifiche
+			);
 
 			return ResponseEntity.ok(utenteDTO);
 
@@ -91,7 +94,6 @@ public class UtentiController {
 	 * Endpoint per aggiornare il profilo dell'utente corrente. Accessibile solo
 	 * agli utenti autenticati. PUT /api/utenti/me
 	 */
-
 	@PutMapping("/me")
 	public ResponseEntity<?> updateMyProfile(@RequestBody ModificaUtenteDTO utenteAggiornatoDto) {
 		return utenteService.updateProfile(utenteAggiornatoDto); // Aggiorna il profilo dell'utente
@@ -100,7 +102,6 @@ public class UtentiController {
 	@PostMapping("/updateLocation")
 	public ResponseEntity<?> updateLocation(@RequestParam double latitudine, @RequestParam double longitudine) {
 		System.out.println("Ricevute coordinate: " + latitudine + ", " + longitudine);
-
 		return utenteService.updateLocation(latitudine, longitudine);
 	}
 
@@ -108,7 +109,6 @@ public class UtentiController {
 	 * Endpoint per visualizzare il profilo pubblico di un altro utente. Accessibile
 	 * solo agli utenti autenticati. GET /api/utenti/{id}
 	 */
-
 	@GetMapping("/{id}")
 	public ResponseEntity<?> getUserProfile(@PathVariable Long id) {
 		try {
@@ -131,7 +131,6 @@ public class UtentiController {
 	 * Endpoint per funzionalità premium. Accessibile solo agli utenti con account
 	 * premium. GET /api/utenti/premium/who-liked-me
 	 */
-
 	@GetMapping("/premium/who-liked-me")
 	@PreAuthorize("hasRole('PREMIUM')") // Annotation per verificare il ruolo
 	public ResponseEntity<?> whoLikedMe() {
@@ -153,7 +152,6 @@ public class UtentiController {
 	 * Endpoint per aggiungere una foto profilo dell'utente Accessibile solo agli
 	 * utenti autenticati.
 	 */
-
 	@PostMapping("/me/foto")
 	public ResponseEntity<?> uploadPhoto(@RequestBody UtenteDiscoverDTO fotoAggiunta) {
 		try {
@@ -196,33 +194,100 @@ public class UtentiController {
 	 */
 	@GetMapping
 	public ResponseEntity<?> getAllUsers() {
-	    try {
+		try {
+			List<Utente> tuttiUtenti = utenteRepository.findAll();
+			
+			// Converte in DTO
+			List<UtenteDiscoverDTO> utentiDTO = tuttiUtenti.stream()
+				.map(utente -> new UtenteDiscoverDTO(
+					utente.getId(),
+					utente.getNome(),
+					utente.getUsername(), // Email
+					utente.getGenere() != null ? utente.getGenere().toString() : null, // Genere
+					utente.getDataNascita(), // Data nascita
+					utente.getBio(), // Bio
+					utente.getInteressi(), // Interessi
+					utente.getFotoProfilo(), // Foto
+					utente.getPosizione() != null ? utente.getPosizione().getCitta() : null, // Città
+					utenteService.calcolaEta(utente.getDataNascita()), // Età
+					utente.getNotificheAttive() // Notifiche
+				))
+				.collect(Collectors.toList());
 
-	        
-	        List<Utente> tuttiUtenti = utenteRepository.findAll();
-	        
-	     // Converte in DTO
-	        List<UtenteDiscoverDTO> utentiDTO = tuttiUtenti.stream()
-	            .map(utente -> new UtenteDiscoverDTO(
-	                utente.getId(),
-	                utente.getNome(),
-	                utente.getUsername(), // 🔥 PARAMETRO 3 - Email
-	                utente.getGenere() != null ? utente.getGenere().toString() : null, // 🔥 PARAMETRO 4 - Genere
-	                utente.getDataNascita(), // 🔥 PARAMETRO 5 - Data nascita
-	                utente.getBio(), // 🔥 PARAMETRO 6 - Bio
-	                utente.getInteressi(), // 🔥 PARAMETRO 7 - Interessi
-	                utente.getFotoProfilo(), // 🔥 PARAMETRO 8 - Foto
-	                utente.getPosizione() != null ? utente.getPosizione().getCitta() : null, // 🔥 PARAMETRO 9 - Città
-	                utenteService.calcolaEta(utente.getDataNascita()), // 🔥 PARAMETRO 10 - Età
-	                utente.getNotificheAttive() // 🔥 PARAMETRO 11 - Notifiche
-	            ))
-	            .collect(Collectors.toList());
-
-	        return ResponseEntity.ok(utentiDTO);
-	        
-	    } catch (Exception e) {
-	        return ResponseEntity.badRequest().body("Errore: " + e.getMessage());
-	    }
+			return ResponseEntity.ok(utentiDTO);
+			
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("Errore: " + e.getMessage());
+		}
 	}
-	
+
+	/**
+	 * 🔥 ENDPOINT PER DISATTIVARE IL PROPRIO ACCOUNT
+	 * POST /api/utenti/me/deactivate
+	 */
+	@PostMapping("/me/deactivate")
+	public ResponseEntity<?> deactivateAccount() {
+		try {
+			String currentUserEmail = SecurityUtils.getCurrentUserEmail();
+			
+			if (currentUserEmail == null) {
+				return ResponseEntity.badRequest().body("Utente non autenticato");
+			}
+			
+			Utente utente = utenteService.findByEmail(currentUserEmail);
+			
+			if (utente == null) {
+				return ResponseEntity.badRequest().body("Utente non trovato");
+			}
+			
+			// 🔥 DISATTIVA L'ACCOUNT
+			utente.setAttivo(false);
+			utenteRepository.save(utente);
+			
+			System.out.println("⚠️ Account disattivato per: " + utente.getUsername());
+			
+			return ResponseEntity.ok("Account disattivato con successo. Per riattivarlo, contatta il supporto.");
+			
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("Errore nella disattivazione: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * 🔥 ENDPOINT PER RIATTIVARE IL PROPRIO ACCOUNT
+	 * POST /api/utenti/me/reactivate
+	 */
+	@PostMapping("/me/reactivate") 
+	public ResponseEntity<?> reactivateAccount(@RequestBody Map<String, String> request) {
+		try {
+			String email = request.get("email");
+			String password = request.get("password");
+			
+			if (email == null || password == null) {
+				return ResponseEntity.badRequest().body("Email e password richieste");
+			}
+			
+			Utente utente = utenteService.findByEmail(email);
+			
+			if (utente == null) {
+				return ResponseEntity.badRequest().body("Utente non trovato");
+			}
+			
+			// Verifica password
+			if (!passwordEncoder.matches(password, utente.getPassword())) {
+				return ResponseEntity.badRequest().body("Password non corretta");
+			}
+			
+			// 🔥 RIATTIVA L'ACCOUNT
+			utente.setAttivo(true);
+			utenteRepository.save(utente);
+			
+			System.out.println("✅ Account riattivato per: " + utente.getUsername());
+			
+			return ResponseEntity.ok("Account riattivato con successo");
+			
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("Errore nella riattivazione: " + e.getMessage());
+		}
+	}
 }

@@ -61,6 +61,18 @@ public class SwipeService {
             // Verifica che esiste l'utente target
             Utente utenteTarget = utenteRepository.findById(dto.getUtenteTargetId())
                 .orElseThrow(() -> new EntityNotFoundException("Utente target non trovato"));
+
+            // 🔥 CONTROLLO CHE L'UTENTE TARGET SIA ATTIVO
+            if (!utenteTarget.isAttivo()) {
+                System.out.println("⚠️ Tentativo di swipe su utente disattivato: " + utenteTarget.getId());
+                throw new IllegalArgumentException("Questo utente non è più disponibile");
+            }
+
+            // 🔥 CONTROLLO CHE L'UTENTE CHE FA SWIPE SIA ATTIVO
+            if (!utenteSwipe.isAttivo()) {
+                System.out.println("⚠️ Utente disattivato tenta di fare swipe: " + utenteSwipe.getId());
+                throw new IllegalArgumentException("Il tuo account non è attivo");
+            }
             
             if (utenteSwipe == utenteTarget) {
             	return "Non puoi creare uno swipe con te stesso";
@@ -199,24 +211,34 @@ public class SwipeService {
      * Ottieni tutti gli utenti che hanno fatto like all'utente corrente in formato UtenteDiscoverDTO (senza dati sensibili)
      */
 
+ // 🔥 SOSTITUISCI IL METODO getUtentiCheMiHannoLikato nel SwipeService
+
     public List<UtenteDiscoverDTO> getUtentiCheMiHannoLikato(List<Utente> utentiWhoLikesMe) {
         try {
             
-        	return utentiWhoLikesMe.stream()
-        			.map(u -> new UtenteDiscoverDTO(
-        			        u.getId(),                    // 1. Long id
-        			        u.getNome(),                  // 2. String nome  
-        			        u.getUsername(),              // 3. String username ✅
-        			        u.getGenere() != null ? u.getGenere().toString() : null, // 4. String genere ✅
-        			        u.getDataNascita(),           // 5. LocalDate dataNascita ✅
-        			        u.getBio(),                   // 6. String bio ✅
-        			        u.getInteressi(),             // 7. String interessi ✅
-        			        u.getFotoProfilo(),           // 8. String fotoProfilo ✅
-        			        u.getPosizione() != null ? u.getPosizione().getCitta() : null, // 9. String citta ✅
-        			        utenteService.calcolaEta(u.getDataNascita()), // 10. Integer eta ✅
-        			        u.getNotificheAttive()        // 11. Boolean notificheAttive ✅
-        			    ))
-        			    .collect(Collectors.toList());
+            // 🔥 FILTRA SOLO UTENTI ATTIVI
+            List<Utente> utentiAttiviCheMiHannoLikato = utentiWhoLikesMe.stream()
+                .filter(u -> u.isAttivo()) // 🔥 SOLO UTENTI CON ACCOUNT ATTIVO
+                .collect(Collectors.toList());
+
+            System.out.println("🔍 Utenti che mi hanno likato totali: " + utentiWhoLikesMe.size());
+            System.out.println("✅ Utenti attivi che mi hanno likato: " + utentiAttiviCheMiHannoLikato.size());
+            
+            return utentiAttiviCheMiHannoLikato.stream()
+                .map(u -> new UtenteDiscoverDTO(
+                    u.getId(),                    // 1. Long id
+                    u.getNome(),                  // 2. String nome  
+                    u.getUsername(),              // 3. String username ✅
+                    u.getGenere() != null ? u.getGenere().toString() : null, // 4. String genere ✅
+                    u.getDataNascita(),           // 5. LocalDate dataNascita ✅
+                    u.getBio(),                   // 6. String bio ✅
+                    u.getInteressi(),             // 7. String interessi ✅
+                    u.getFotoProfilo(),           // 8. String fotoProfilo ✅
+                    u.getPosizione() != null ? u.getPosizione().getCitta() : null, // 9. String citta ✅
+                    utenteService.calcolaEta(u.getDataNascita()), // 10. Integer eta ✅
+                    u.getNotificheAttive()        // 11. Boolean notificheAttive ✅
+                ))
+                .collect(Collectors.toList());
             
         } catch (Exception e) {
             throw new RuntimeException("Errore nel recupero dei likes ricevuti", e);

@@ -127,10 +127,12 @@ public class PreferenzeService {
         return Period.between(dataNascita, LocalDate.now()).getYears();
     }
     
-    // PreferenzeService.java (inside getUtentiByPreferenze)
+
+ // 🔥 SOSTITUISCI IL METODO getUtentiByPreferenze nel PreferenzeService
+
     public ResponseEntity<?> getUtentiByPreferenze(String username, int page, int size) {
-    	
-    	// Recupero l'utente autenticato e le sue preferenze
+        
+        // Recupero l'utente autenticato e le sue preferenze
         Utente utente = utenteRepository.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("Utente non trovato"));
         
@@ -161,23 +163,31 @@ public class PreferenzeService {
             pageable
         );
 
-        // Converte gli utenti in DTO
-        List<UtenteDiscoverDTO> utentiDTO = utenti.stream()
-        	    .map(u -> new UtenteDiscoverDTO(
-        	        u.getId(),                    // 1. Long id
-        	        u.getNome(),                  // 2. String nome  
-        	        u.getUsername(),              // 3. String username ✅
-        	        u.getGenere() != null ? u.getGenere().toString() : null, // 4. String genere ✅
-        	        u.getDataNascita(),           // 5. LocalDate dataNascita ✅
-        	        u.getBio(),                   // 6. String bio ✅
-        	        u.getInteressi(),             // 7. String interessi ✅
-        	        u.getFotoProfilo(),           // 8. String fotoProfilo ✅
-        	        u.getPosizione() != null ? u.getPosizione().getCitta() : null, // 9. String citta ✅
-        	        calcolaEta(u.getDataNascita()), // 10. Integer eta ✅
-        	        u.getNotificheAttive()        // 11. Boolean notificheAttive ✅
-        	    ))
-        	    .collect(Collectors.toList());
+        // 🔥 FILTRA SOLO UTENTI ATTIVI
+        List<Utente> utentiAttivi = utenti.stream()
+            .filter(u -> u.isAttivo()) // 🔥 SOLO UTENTI CON ACCOUNT ATTIVO
+            .collect(Collectors.toList());
 
-        	return ResponseEntity.ok(utentiDTO);
-    }   
+        System.out.println("🔍 Utenti totali trovati: " + utenti.size());
+        System.out.println("✅ Utenti attivi filtrati: " + utentiAttivi.size());
+
+        // Converte gli utenti in DTO
+        List<UtenteDiscoverDTO> utentiDTO = utentiAttivi.stream()
+            .map(u -> new UtenteDiscoverDTO(
+                u.getId(),                    // 1. Long id
+                u.getNome(),                  // 2. String nome  
+                u.getUsername(),              // 3. String username ✅
+                u.getGenere() != null ? u.getGenere().toString() : null, // 4. String genere ✅
+                u.getDataNascita(),           // 5. LocalDate dataNascita ✅
+                u.getBio(),                   // 6. String bio ✅
+                u.getInteressi(),             // 7. String interessi ✅
+                u.getFotoProfilo(),           // 8. String fotoProfilo ✅
+                u.getPosizione() != null ? u.getPosizione().getCitta() : null, // 9. String citta ✅
+                calcolaEta(u.getDataNascita()), // 10. Integer eta ✅
+                u.getNotificheAttive()        // 11. Boolean notificheAttive ✅
+            ))
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(utentiDTO);
+    }
 }

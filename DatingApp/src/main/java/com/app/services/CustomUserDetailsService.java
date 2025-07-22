@@ -33,26 +33,30 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
  
-		// Cerca l'utente nel database usando l'email
-		Utente utente = utenteRepository.findByUsername(email)
-				.orElseThrow(() -> new UsernameNotFoundException("Utente non trovato con email: " + email));
-
-		// Definisce i ruoli dell'utente basati sul tipo di account
-		List<SimpleGrantedAuthority> authorities = getAuthorities(utente);
-	
-		// Restituisce un oggetto User di Spring Security con:
-		// - email come username, password hash, e lista di autorizzazioni
-			return new CustomUserDto(
-				utente.getId(),				// id
-			    utente.getUsername(),       // username (useremo l'email)
-			    utente.getPassword(),       // password hashata
-			    true,                       // account abilitato
-			    true,                       // account non scaduto
-			    true,                       // credenziali non scadute
-			    true,                       // account non bloccato
-			    authorities                 // lista delle autorizzazioni/ruoli
-			);
-			
+        // Cerca l'utente nel database usando l'email
+        Utente utente = utenteRepository.findByUsername(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato con email: " + email));
+        
+        // 🔥 CONTROLLO ACCOUNT ATTIVO - BLOCCA LOGIN SE NON ATTIVATO
+        if (!utente.isAttivo()) {
+            throw new UsernameNotFoundException("Account non attivato. Controlla la tua email per attivare l'account.");
+        }
+        
+        // Definisce i ruoli dell'utente basati sul tipo di account
+        List<SimpleGrantedAuthority> authorities = getAuthorities(utente);
+    
+        // Restituisce un oggetto User di Spring Security con:
+        // - email come username, password hash, e lista di autorizzazioni
+        return new CustomUserDto(
+            utente.getId(),             // id
+            utente.getUsername(),       // username (useremo l'email)
+            utente.getPassword(),       // password hashata
+            utente.isAttivo(),          // 🔥 account abilitato = attivo
+            true,                       // account non scaduto
+            true,                       // credenziali non scadute
+            utente.isAttivo(),          // 🔥 account non bloccato = attivo
+            authorities                 // lista delle autorizzazioni/ruoli
+        );
     }
  
     /**
@@ -62,26 +66,24 @@ public class CustomUserDetailsService implements UserDetailsService {
      */
     
     private List<SimpleGrantedAuthority> getAuthorities(Utente utente) {
-    	
-    	if("ADMIN".equals(utente.getTipoAccount())) {
-    		// Gli utenti premium hanno entrambi i ruoli
+        
+        if("ADMIN".equals(utente.getTipoAccount())) {
+            // Gli utenti admin hanno tutti i ruoli
             return Arrays.asList(
                 new SimpleGrantedAuthority("ROLE_USER"),
                 new SimpleGrantedAuthority("ROLE_PREMIUM"),
                 new SimpleGrantedAuthority("ROLE_ADMIN")
-                );
-    	}
-	    	else if ("PREMIUM".equals(utente.getTipoAccount())) {
-	             // Gli utenti premium hanno entrambi i ruoli
-	             return Arrays.asList(
-	                 new SimpleGrantedAuthority("ROLE_USER"),
-	                 new SimpleGrantedAuthority("ROLE_PREMIUM")
-	             );
-	         } else {
-	             // Gli utenti standard hanno solo il ruolo USER
-	             return Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
-	         }
-        
+            );
+        }
+        else if ("PREMIUM".equals(utente.getTipoAccount())) {
+            // Gli utenti premium hanno entrambi i ruoli
+            return Arrays.asList(
+                new SimpleGrantedAuthority("ROLE_USER"),
+                new SimpleGrantedAuthority("ROLE_PREMIUM")
+            );
+        } else {
+            // Gli utenti standard hanno solo il ruolo USER
+            return Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
+        }
     }
-	    
 }
