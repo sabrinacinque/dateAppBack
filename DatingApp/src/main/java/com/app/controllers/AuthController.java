@@ -22,6 +22,7 @@ import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -67,6 +68,9 @@ public class AuthController {
     
     @Autowired
     private EmailService emailService;
+    
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
  
     /**
      * Endpoint per la registrazione di un nuovo utente.
@@ -204,7 +208,7 @@ public class AuthController {
             if (verificationToken == null || verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
                 // Token non valido → redirect con errore
                 return ResponseEntity.status(302)
-                    .header("Location", "http://localhost:4200/confirm?error=true&message=Token%20non%20valido%20o%20scaduto")
+                    .header("Location", frontendUrl + "/confirm?error=true&message=Token%20non%20valido%20o%20scaduto") // 🔥 CAMBIATO
                     .build();
             }
 
@@ -214,17 +218,16 @@ public class AuthController {
 
             // Successo → redirect con conferma
             return ResponseEntity.status(302)
-                .header("Location", "http://localhost:4200/confirm?success=true")
+                .header("Location", frontendUrl + "/confirm?success=true") // 🔥 CAMBIATO
                 .build();
                 
         } catch (Exception e) {
             // Errore generico → redirect con errore
             return ResponseEntity.status(302)
-                .header("Location", "http://localhost:4200/confirm?error=true&message=" + e.getMessage())
+                .header("Location", frontendUrl + "/confirm?error=true&message=" + e.getMessage()) // 🔥 CAMBIATO
                 .build();
         }
     }
-    
     
     /**
      * Endpoint per il logout degli utenti.
