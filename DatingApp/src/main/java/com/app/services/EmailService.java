@@ -1,6 +1,7 @@
 package com.app.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -13,6 +14,9 @@ public class EmailService {
     
     @Autowired
     private JavaMailSender mailSender;
+    
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
     
     public void sendConfirmationEmail(String to, String token) {
         try {
@@ -141,7 +145,7 @@ public class EmailService {
     public void sendPasswordResetEmail(String to, String resetToken) {
         try {
             String subject = "🔑 Reset Password - LOVVAMI ❤️";
-            String resetUrl = "http://localhost:4200/reset-password?token=" + resetToken;
+            String resetUrl = frontendUrl + "/reset-password?token=" + resetToken; // 🔥 CAMBIATO
             
             String htmlBody = createPasswordResetEmailTemplate(resetUrl, to);
 
@@ -215,7 +219,7 @@ public class EmailService {
     // Fallback email semplice
     private void sendSimplePasswordResetEmail(String to, String resetToken) {
         String subject = "Reset Password - LOVVAMI";
-        String resetUrl = "http://localhost:4200/reset-password?token=" + resetToken;
+        String resetUrl = frontendUrl + "/reset-password?token=" + resetToken; // 🔥 CAMBIATO
         String body = "Clicca sul link per reimpostare la password: " + resetUrl;
         
         SimpleMailMessage message = new SimpleMailMessage();
